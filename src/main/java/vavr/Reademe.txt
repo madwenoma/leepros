@@ -1,0 +1,3 @@
+https://blog.csdn.net/revivedsun/article/details/80088080
+
+vavr java8函数编程的一个库，对java8的一个补充
