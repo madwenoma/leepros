@@ -1,0 +1,46 @@
+一、现象
+public class FirstClientHandler extends ChannelInboundHandlerAdapter {
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) {
+        for (int i = 0; i < 1000; i++) {
+            ByteBuf buffer = getByteBuf(ctx);
+            ctx.channel().writeAndFlush(buffer);
+        }
+    }
+
+    private ByteBuf getByteBuf(ChannelHandlerContext ctx) {
+        byte[] bytes = "你好，欢迎关注我的微信公众号，《闪电侠的博客》!".getBytes(Charset.forName("utf-8"));
+        ByteBuf buffer = ctx.alloc().buffer();
+        buffer.writeBytes(bytes);
+
+        return buffer;
+    }
+}
+
+像如上方式发送，客户端如下读取，就会产生粘包
+
+public class FirstServerHandler extends ChannelInboundHandlerAdapter {
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        ByteBuf byteBuf = (ByteBuf) msg;
+
+        System.out.println(new Date() + ": 服务端读到数据 -> " + byteBuf.toString(Charset.forName("utf-8")));
+    }
+}
+
+对于操作系统来说，只认 TCP 协议，尽管我们的应用层是按照 ByteBuf 为 单位来发送数据，
+但是到了底层操作系统仍然是按照字节流发送数据，因此，数据到了服务端，也是按照字节流的方式读入，
+然后到了 Netty 应用层面，重新拼装成 ByteBuf，而这里的 ByteBuf 与客户端按顺序发送的 ByteBuf 可能是不对等的。
+
+二、Netty 自带的拆包器
+1. 固定长度 FixedLengthFrameDecoder
+2. 换行符 LineBasedFrameDecoder
+3. 分隔符 DelimiterBasedFrameDecoder
+4. 基于长度字段（常用）LengthFieldBasedFrameDecoder
+    1.所谓“长度字段”的含义，是指协议里有一个字段包含了协议里的消息体的二进制字节长度。读完了这些长度，就表示一次发包的消息读完了。
+
+使用方法：
+如某协议定为：4字节魔数|1字节版本号|1字节序列化算法|1字节指令|4字节数据长度|数据N字节
+4+1+1+1=7
+new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 7, 4);//第几个开始是长度字段，长度字段占几个字节

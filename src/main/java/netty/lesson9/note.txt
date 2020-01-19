@@ -1,0 +1,7 @@
+本章主要实现了“登录”功能
+    1.server启动
+    2.client启动
+    3.client发送登录请求
+    4.server收到请求，校验密码
+    5.server发送登录结果响应
+    6.client收到响应，打印结果

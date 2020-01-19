@@ -1,0 +1,6 @@
+本节 实现了一个client与另一个client的消息互通。
+    1.运行nettyClient 输入用户名tom
+    2.运行nettyClient.java 输入用户名 jerry
+    3.在第一个控制台，输入jerry 你好
+    4.在第二个控制台里看到，收到了tom发来的你好
+    5.在第二个控制台里输入jerry 你也好

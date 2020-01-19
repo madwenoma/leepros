@@ -1,0 +1,15 @@
+ 聊天室实现，多client管理
+
+ 首先，依然是三位用户依次登录到服务器，分别是闪电侠、极速、萨维塔。
+ 然后，我们在闪电侠的控制台输入 createGroup 指令，提示创建群聊需要输入 userId 列表，然后我们输入以英文逗号分隔的 userId。
+ 群聊创建成功之后，分别在服务端和三个客户端弹出提示消息，包括群的 ID 以及群里各位用户的昵称。
+
+ 17、18、19课放在一起，支持命令为：
+     String JOIN_GROUP = "joinGroup";
+     String LIST_GROUP = "listGroup";
+     String QUIT_GROUP = "quitGroup";
+     String CREATE_GROUP = "createGroup";
+     String SEND_TO_GROUP = "sendToGroup";
+
+
+优化版放在lesson19

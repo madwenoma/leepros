@@ -1,0 +1,39 @@
+lesson17 实现了聊天室基本功能
+lesson19在其基础上做了优化
+1.handler的单例优化
+    每次有新连接到来的时候，都会调用 ChannelInitializer 的 initChannel() 方法，然后这里 9 个指令相关的 handler 都会被 new 一次。
+
+    一个 handler 要被多个 channel 进行共享，必须要加上 @ChannelHandler.Sharable
+
+    Spliter 需要维持每个 channel 当前读到的数据，也就是说他是有状态的。
+
+
+2.PacketDecoder 与 PacketEncoder 我们是可以继续改造的，Netty 内部提供了一个类，叫做 MessageToMessageCodec
+用MessageToMessageCodec取代PacketDecoder 与 PacketEncoder
+
+3.缩短事件传播路径,合并平行 handler
+
+4.更改事件传播源
+
+在某个 inBound 类型的 handler 处理完逻辑之后，调用 ctx.writeAndFlush() 可以直接一口气把对象送到 codec 中编码，然后写出去。
+
+5.减少主线程阻塞。channelRead0里的方法如果耗时长，可能导致整个链条变慢。
+
+protected void channelRead0(ChannelHandlerContext ctx, T packet) {
+    threadPool.submit(new Runnable() {
+        // 1. balabala 一些逻辑
+        // 2. 数据库或者网络等一些耗时的操作
+        // 3. writeAndFlush()
+        // 4. balabala 其他的逻辑
+    })
+}
+
+6.准确统计处理时长。使用future
+
+xxx.writeAndFlush().addListener(future -> {
+            if (future.isDone()) {
+                // 4. balabala 其他的逻辑
+                long time =  System.currentTimeMillis() - begin;
+            }
+        });
+

@@ -1,0 +1,55 @@
+ChannelHandler的生命周期
+
+一、打开过程的生命周期：
+handlerAdded() -> channelRegistered() -> channelActive() -> channelRead() -> channelReadComplete()
+
+
+1.handlerAdded() ：
+    指的是当检测到新连接之后，调用 ch.pipeline().addLast(new LifeCyCleTestHandler()); 之后的回调，
+    表示在当前的 channel 中，已经成功添加了一个 handler 处理器。
+
+2.channelRegistered()：
+    这个回调方法，表示当前的 channel 的所有的逻辑处理已经和某个 NIO 线程建立了绑定关系，
+    类似我们在Netty 是什么？这小节中 BIO 编程中，accept 到新的连接，然后创建一个线程来处理这条连接的读写，
+    只不过 Netty 里面是使用了线程池的方式，只需要从线程池里面去抓一个线程绑定在这个 channel 上即可，
+    这里的 NIO 线程通常指的是 NioEventLoop,不理解没关系，后面我们还会讲到。
+
+3.channelActive()：
+    当 channel 的所有的业务逻辑链准备完毕（也就是说 channel 的 pipeline 中已经添加完所有的 handler）
+    以及绑定好一个 NIO 线程之后，这条连接算是真正激活了，接下来就会回调到此方法。
+
+4.channelRead()：
+    客户端向服务端发来数据，每次都会回调此方法，表示有数据可读。
+
+5.channelReadComplete()：
+    服务端每次读完一次完整的数据之后，回调该方法，表示数据读取完毕。
+
+
+二、关闭过程的生命周期
+
+channelInactive() -> channelUnregistered() -> handlerRemoved()
+
+in-active、un-registered、remove
+
+channelInactive():
+    表面这条连接已经被关闭了，这条连接在 TCP 层面已经不再是 ESTABLISH 状态了
+
+channelUnregistered():
+    既然连接已经被关闭，那么与这条连接绑定的线程就不需要对这条连接负责了，
+    这个回调就表明与这条连接对应的 NIO 线程移除掉对这条连接的处理
+
+handlerRemoved()：
+    最后，我们给这条连接上添加的所有的业务逻辑处理器都给移除掉。
+
+
+三、一些知识点
+1.ChannelInitializer 定义了一个抽象的方法 initChannel()，里面调用了add和registered
+2.added和removed通常用于资源的申请和释放
+3.active和inactive
+    1.acive激活后，本机tcp连接数+1
+    2.黑白名单过滤
+
+4.channelReadComplete。这个方法里可以实现批量刷新的功能。前面章节里的writeAndFlush不是批量刷新的，是调用一次刷新一次。
+吧writeAdnFlush改为flush，然后在channelReadComplete调用ctx.channel().flush()可以实现批量刷新。
+
+5.
